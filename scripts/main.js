@@ -45,7 +45,7 @@ function clearAll() {
     constraints = [];
 }
 
-function drawAtomPhysicsJs(from, atom) {
+function drawAtomPhysicsJs(from, atom, context) {
     var b;
 
 //    var node = graph.newNode({ label: atom.element });
@@ -54,9 +54,16 @@ function drawAtomPhysicsJs(from, atom) {
     var mass = atom.element == 'H' ? 3 : 1;
     var color = atom.element == 'H' ? 0x888888 : 0x5555FF;
 
+    if (atom.primaryChain) {
+        context.carbon++;
+        context.sidegroups = 0;
+    } else {
+        context.sidegroups++;
+    }
+
     var node = Physics.body('circle', {
-        x: Math.random() - 0.5,
-        y: Math.random() - 0.5,
+        x: (context.carbon - 1) * 30 - (0.5 * (context.carbonNum - 1)) - 30 + context.sidegroups * 5,
+        y: atom.primaryChain ? 0 : (context.sidegroups % 2 ? 1 : -1) * context.sidegroups * 30,
 //        x: (Math.random()-0.5)* 200 + 1024/2, // x-coordinate
 //        y: (Math.random()-0.5)* 200 + 768/2, // y-coordinate
         vx: 0, // velocity in x-direction
@@ -72,7 +79,7 @@ function drawAtomPhysicsJs(from, atom) {
         var bond = atom.bonds[b];
         var otherAtom = atom.bonds[b].getOtherAtom(atom);
         if (otherAtom != from) {
-            var n = drawAtomPhysicsJs(atom, otherAtom);
+            var n = drawAtomPhysicsJs(atom, otherAtom, context);
 
             constraints.push(verletConstraints.distanceConstraint(node, n, 0.9, 30));
 //            graph.newEdge(node, n, { directional: false });
@@ -97,71 +104,16 @@ function parse(str) {
     var atom = organicNameToMolecyle(data);
 
     clearAll();
-    drawAtomPhysicsJs(null, atom);
+    drawAtomPhysicsJs(null, atom,
+        {
+            carbonNum: data.rootword,
+            carbon: 0,
+            sidegroups: 0
+        });
     return atom;
 
     //paper.clear();
     //renderAtom(atom, paper, 20, 50);
-}
-
-function initThree() {
-    var camera, scene, renderer;
-    var geometry, material, mesh;
-
-    //init();
-    //animate();
-
-    var init = function () {
-
-        camera = new THREE.PerspectiveCamera(75, 1024 / 768, 1, 10000);
-        camera.position.z = 300;
-
-        scene = new THREE.Scene();
-
-        geometry = new THREE.CubeGeometry(200, 200, 200);
-        material = new THREE.MeshLambertMaterial(
-    {
-        color: 0xCC0000
-    });//THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
-
-        mesh = new THREE.Mesh(geometry, material);
-        scene.add(mesh);
-
-        // create a point light
-        var pointLight =
-          new THREE.PointLight(0xFFFFFF);
-
-        // set its position
-        pointLight.position.x = 10;
-        pointLight.position.y = 50;
-        pointLight.position.z = 130;
-
-        // add to the scene
-        scene.add(pointLight);
-
-        //renderer = new THREE.CanvasRenderer();
-        renderer = new THREE.WebGLRenderer();
-        renderer.setSize(1024, 768);
-
-        $('#3dcontainer').append(renderer.domElement);
-
-    };
-    init();
-
-    var animate = function () {
-
-        // note: three.js includes requestAnimationFrame shim
-        requestAnimationFrame(animate);
-
-        //mesh.rotation.x += 0.01;
-        //mesh.rotation.y += 0.02;
-        camera.rotation.x += 0.01;
-        camera.rotation.y += 0.02;
-
-        renderer.render(scene, camera);
-
-    };
-    animate();
 }
 
 var corners = [];
@@ -225,10 +177,8 @@ $(document).ready(function () {
 
                     this.scene = new THREE.Scene();
 
-                    this.material = new THREE.MeshLambertMaterial(
-    {
-        color: 0xCC0000
-    });
+                    //this.material = new THREE.MeshLambertMaterial( { color: 0xCC0000 });
+                    this.material = new THREE.MeshPhongMaterial({ color: 0xCC0000 });
 
                     // create a point light
                     var pointLight = new THREE.PointLight(0xFFFFFF);
@@ -261,9 +211,10 @@ $(document).ready(function () {
                     if (geometry.name == 'circle') {
                         //var geometry = new THREE.CubeGeometry(20, 20, 20);
                         var sphere = new THREE.SphereGeometry(geometry.radius, 20, 10);
-                        var material = new THREE.MeshLambertMaterial(
+                        var material = new THREE.MeshPhongMaterial(
                             {
-                                color: 0x55FFFF//geometry.body.options.color
+                                color: 0x55FFFF,
+                                specular: 0x00FF00//geometry.body.options.color
                             });
                         mesh = new THREE.Mesh(sphere, material);
                         this.scene.add(mesh);

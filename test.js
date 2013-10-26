@@ -38,6 +38,8 @@ function organicNameToMolecyle(parsedMolecule) {
     var prevAtom;
     for (i = 0; i < carbonNum; i++) {
         var atom = new Atom('C');
+        atom.primaryChain = true;
+
         primaryChain.push(atom);
         if (prevAtom) {
             atom.addBond(prevAtom, 1);
