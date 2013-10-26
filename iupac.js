@@ -37,6 +37,12 @@ case 21: this.$ = 'butyyli'
 break;
 case 22: this.$ = 'propyyli' 
 break;
+case 23: this.$ = 'cyclo' 
+break;
+case 24: this.$ = 'spiro' 
+break;
+case 25: this.$ = 'bicyclo' 
+break;
 case 27: this.$ = 1 
 break;
 case 28: this.$ = 2 

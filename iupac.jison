@@ -69,9 +69,11 @@ prefixname:
     ;
 
 infix:
-    'cyclo'
-    | 'spiro'
-    | 'bicyclo'
+    'cyclo' { $$ = 'cyclo' }
+    | 
+    'spiro' { $$ = 'spiro' }
+    | 
+    'bicyclo'{ $$ = 'bicyclo' }
     |
     ;
 

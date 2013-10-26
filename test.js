@@ -49,15 +49,22 @@ function organicNameToMolecyle(parsedMolecule) {
         } else {
             atom.addBond(new Atom('H'), 1);
             atom.addBond(new Atom('H'), 1);
-            atom.addBond(new Atom('H'), 1);
+            if (parsedMolecule.infix != "cyclo") {
+                atom.addBond(new Atom('H'), 1);
+            }
         }
 
-        if (i + 1 == carbonNum)
+        if (i + 1 == carbonNum && parsedMolecule.infix != "cyclo")
         {
             atom.addBond(new Atom('H'), 1);
         }
 
         prevAtom = atom;
+    }
+
+    if (parsedMolecule.infix == "cyclo") {
+        // Complete the cycle.
+        prevAtom.addBond(primaryChain[0]);
     }
 
     return primaryChain[0];

@@ -71,3 +71,6 @@ console.log("Should parse".yellow.bold);
 runTests(PassTests, printPass, printFail);
 console.log("Should not parse".yellow.bold);
 runTests(FailTests, function (testname) { printFail(testname, "Should not parse."); }, printPass);
+
+var data = parser.parse("cycloheksaani");
+console.log("infix: " + data.infix);

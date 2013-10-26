@@ -46,6 +46,12 @@ function clearAll() {
 }
 
 function drawAtomPhysicsJs(from, atom, context) {
+    console.log('drawAtomPhysicsJs: ' + atom.element);
+    if (atom.visited) {
+        console.log('drawAtomPhysicsJs: visited');
+        return atom.node;
+    }
+    atom.visited = true;
     var b;
 
 //    var node = graph.newNode({ label: atom.element });
@@ -72,6 +78,7 @@ function drawAtomPhysicsJs(from, atom, context) {
         mass: mass,
         color: color
     });
+    atom.node = node;
     gworld.add(node);
     allBodies.push(node);
 
@@ -80,8 +87,9 @@ function drawAtomPhysicsJs(from, atom, context) {
         var otherAtom = atom.bonds[b].getOtherAtom(atom);
         if (otherAtom != from) {
             var n = drawAtomPhysicsJs(atom, otherAtom, context);
-
-            constraints.push(verletConstraints.distanceConstraint(node, n, 0.9, 30));
+            if (n) {
+                constraints.push(verletConstraints.distanceConstraint(node, n, 0.9, 30));
+            }
 //            graph.newEdge(node, n, { directional: false });
         }
     }
