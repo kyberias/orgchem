@@ -4,6 +4,8 @@
     var tokenlist = [
         'metyyli', 'etyyli', 'butyyli', 'propyyli',
         'met', 'et', 'prop', 'but', 'pent', 'heks', 'hept', 'okt', 'non', 'dek',
+            'undek', 'dodec', 'tridek', 'tetradek', 'pentadek', 
+            'eikos', 'triakont', 'tetrakont', 'pentakont',
         'aani', 'eeni', 'yyni',
         'cyclo', 'spiro', 'bicyclo',
         'di', 'tri', 'iso',

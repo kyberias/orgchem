@@ -96,6 +96,24 @@ rootword
         { $$ = 9 }
      | 'dek'
         { $$ = 10 }
+     | 'undek'
+        { $$ = 11 }
+     | 'dodek'
+        { $$ = 12 }
+     | 'tridek'
+        { $$ = 13 }
+     | 'tetradek'
+        { $$ = 14 }
+     | 'pentadek'
+        { $$ = 15 }
+     | 'eikos'
+        { $$ = 20 }
+     | 'triakont'
+        { $$ = 30 }
+     | 'tetrakont'
+        { $$ = 40 }
+     | 'pentakont'
+        { $$ = 50 }
     ;
 
 primarysuffix

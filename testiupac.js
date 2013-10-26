@@ -8,6 +8,9 @@ parser.lexer = {
 }
 
 var PassTests = [
+"pentadekaani",
+"undekaani",
+"dekaani",
 "metyylicycloetaani",
 "metyylietanoli",
 "metyylietan-2,2-oli",
