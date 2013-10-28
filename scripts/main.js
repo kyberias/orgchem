@@ -127,6 +127,8 @@ function parse(str) {
 var corners = [];
 var center;
 
+var gCameraHeight = 200, gCameraDistance = 200;
+
 function orientMesh(geom, mesh, vstart, vend) {
     var HALF_PI = Math.PI * .5;
     var position = vend.clone().add(vstart).divideScalar(2);
@@ -178,17 +180,24 @@ $(document).ready(function () {
                     proto.init.call(this, options);
 
                     this.camera = new THREE.PerspectiveCamera(75, 1024 / 768, 1, 10000);
-                    this.camera.position.z = 200;
-                    this.camera.position.y = -200;
+                    this.camera.position.x = 0;
+                    this.camera.position.y = 0;
+                    this.camera.position.z = gCameraDistance * 500;
+
+                    this.camera.up.set(0, 1, 0);
 
                     this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
                     this.scene = new THREE.Scene();
 
-                    //this.material = new THREE.MeshLambertMaterial( { color: 0xCC0000 });
-                    this.material = new THREE.MeshPhongMaterial({ color: 0xCC0000 });
+/*                    this.material = new THREE.MeshPhongMaterial({ color: 0x888800 });
+                    this.material.side = THREE.DoubleSide;
 
-                    // create a point light
+                    var globe = new THREE.SphereGeometry(1000, 200, 100);
+                    var mesh = new THREE.Mesh(globe, this.material);
+                    this.scene.add(mesh);*/
+
+                   // create a point light
                     var pointLight = new THREE.PointLight(0xFFFFFF);
 
                     // set its position
@@ -202,7 +211,7 @@ $(document).ready(function () {
                     this.renderer = new THREE.WebGLRenderer({ antialias: true });
                     this.renderer.setSize(1024, 768);
                     // Set the background color of the scene.
-                    this.renderer.setClearColorHex(0x111111, 1);
+                    this.renderer.setClearColor(0x111111, 1);
 
                     $('#3dcontainer').append(this.renderer.domElement);
                 },
@@ -280,8 +289,48 @@ $(document).ready(function () {
             }
         });
         grenderer = renderer;
-
         world.add(renderer);
+
+        Physics.behavior('parasitic-drag', function (parent) {
+
+            var defaults = {
+
+                coeff: 1
+            };
+
+            return {
+
+                /**
+                 * Initialization
+                 * @param  {Object} options Configuration object
+                 * @return {void}
+                 */
+                init: function (options) {
+
+                    parent.init.call(this, options);
+
+                    // extend options
+                    this.options = Physics.util.extend(this.options, defaults, options);
+                },
+
+                /**
+                 * Callback run on integrate:positions event
+                 * @param  {Object} data Event data
+                 * @return {void}
+                 */
+                behave: function (data) {
+
+                    var bodies = data.bodies;
+
+                    for (var i = 0, l = bodies.length; i < l; ++i) {
+                        var vel = bodies[i].state.vel.clone();
+                        bodies[i].accelerate(vel.mult(this.options.coeff / bodies[i].mass).negate());
+                    }
+                }
+            };
+        });
+
+        world.add(Physics.behavior('parasitic-drag', { coeff: 0.01 }));
 
         var edgeBounce = Physics.behavior('edge-collision-detection', {
             aabb: Physics.aabb(0, 0, 1024, 768),
@@ -315,7 +364,6 @@ $(document).ready(function () {
         world.add(Physics.behavior('newtonian', { strength: -5 }));
 //        world.add(Physics.behavior('body-impulse-response'));
 
-        // render the "branches"
         world.subscribe('beforeRender', function (data) {
 
             var renderer = data.renderer
@@ -323,6 +371,7 @@ $(document).ready(function () {
                 , c
             ;
 
+            // render the "branches"
             for (var i = 0, l = constrs.length; i < l; ++i) {
 
                 c = constrs[i];
@@ -342,15 +391,26 @@ $(document).ready(function () {
                 orientMesh(c.geom, c.mesh,
                     new THREE.Vector3(c.bodyA.state.pos.get(0), c.bodyA.state.pos.get(1), 0),
                     new THREE.Vector3(c.bodyB.state.pos.get(0), c.bodyB.state.pos.get(1), 0));
-
-                //c.mesh.position.set(pos.get(0), pos.get(1), 0);
-
-                /*renderer.drawLine(c.bodyA.state.pos, c.bodyB.state.pos, {
-                    strokeStyle: '#1133ff',
-                    lineCap: 'round',
-                    lineWidth: c.targetLength * c.targetLength * 0.0016
-                });*/
             }
+
+            // Point camera to mass center
+            var totalMass = 0;
+            var scratch = Physics.scratchpad();
+            var massCenter = scratch.vector();
+            var pos = scratch.vector();
+            for (var i = 0; i < data.bodies.length; i++) {
+                pos.clone(data.bodies[i].state.pos);
+                pos.mult(data.bodies[i].mass);
+                massCenter.vadd(pos);
+                totalMass += data.bodies[i].mass;
+            }
+
+            renderer.camera.lookAt(new THREE.Vector3(massCenter.get(0) / totalMass, massCenter.get(1) / totalMass, 0));
+
+            renderer.camera.position.x = massCenter.get(0) / totalMass;
+            renderer.camera.position.y = massCenter.get(1) / totalMass - gCameraHeight * 500;
+            renderer.camera.position.z = gCameraDistance * 500;
+            scratch.done();
         });
 
         /*Physics.util.ticker.subscribe(function (time, dt) {
@@ -376,6 +436,16 @@ $(document).ready(function () {
         };
 
         animate();
+
+        gCameraHeight = parseFloat($("#cameraHeight").val()) / 1000.0;
+        $("#cameraHeight").change(function () {
+            gCameraHeight = parseFloat($(this).val()) / 1000.0;
+        });
+
+        gCameraDistance = parseFloat($("#cameraDistance").val()) / 1000.0;
+        $("#cameraDistance").change(function () {
+            gCameraDistance = parseFloat($(this).val()) / 1000.0;
+        });
 
         $("#startButton").click(function () {
             Physics.util.ticker.start();

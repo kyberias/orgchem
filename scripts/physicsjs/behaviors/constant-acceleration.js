@@ -70,7 +70,6 @@
                 var bodies = data.bodies;
     
                 for ( var i = 0, l = bodies.length; i < l; ++i ){
-                    
                     bodies[ i ].accelerate( this._acc );
                 }
             }
