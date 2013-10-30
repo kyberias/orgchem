@@ -20,6 +20,7 @@ function Atom(element) {
         var bond = new Bond(self, atom, level)
         self.bonds.push(bond);
         atom.bonds.push(bond);
+        return self;
     }
 }
 
@@ -27,12 +28,6 @@ function organicNameToMolecyle(parsedMolecule) {
     var carbonNum = parsedMolecule.rootword;
 
     var sideChains = {};
-    if (parsedMolecule.prefix) {
-        var p;
-        for (p = 0; p < parsedMolecule.prefix.length; p++) {
-
-        }
-    }
 
     primaryChain = [];
     var prevAtom;
@@ -43,21 +38,21 @@ function organicNameToMolecyle(parsedMolecule) {
         primaryChain.push(atom);
         if (prevAtom) {
             atom.addBond(prevAtom, 1);
-            atom.addBond(new Atom('H'), 1);
-            atom.addBond(new Atom('H'), 1);
+//            atom.addBond(new Atom('H'), 1);
+//            atom.addBond(new Atom('H'), 1);
 
         } else {
-            atom.addBond(new Atom('H'), 1);
-            atom.addBond(new Atom('H'), 1);
-            if (parsedMolecule.infix != "cyclo") {
+//            atom.addBond(new Atom('H'), 1);
+//            atom.addBond(new Atom('H'), 1);
+/*            if (parsedMolecule.infix != "cyclo") {
                 atom.addBond(new Atom('H'), 1);
-            }
+            }*/
         }
 
-        if (i + 1 == carbonNum && parsedMolecule.infix != "cyclo")
+/*        if (i + 1 == carbonNum && parsedMolecule.infix != "cyclo")
         {
             atom.addBond(new Atom('H'), 1);
-        }
+        }*/
 
         prevAtom = atom;
     }
@@ -65,6 +60,60 @@ function organicNameToMolecyle(parsedMolecule) {
     if (parsedMolecule.infix == "cyclo") {
         // Complete the cycle.
         prevAtom.addBond(primaryChain[0]);
+    }
+
+    if (parsedMolecule.prefix) {
+        var p;
+        for (p = 0; p < parsedMolecule.prefix.length; p++) {
+            var prefix = parsedMolecule.prefix[p];
+            var generator;
+            if (prefix.name == "metyyli") {
+                generator = function () {
+                    groupToAdd = new Atom('C');
+                    groupToAdd.addBond(new Atom('H'), 1);
+                    groupToAdd.addBond(new Atom('H'), 1);
+                    groupToAdd.addBond(new Atom('H'), 1);
+                    return groupToAdd;
+                }
+            } else if (prefix.name == "etyyli") {
+                generator = function () {
+                    groupToAdd = new Atom('C');
+                    groupToAdd.addBond(new Atom('H'), 1);
+                    groupToAdd.addBond(new Atom('H'), 1);
+                    groupToAdd.addBond(new Atom('C').addBond(new Atom('H'), 1).addBond(new Atom('H'), 1).addBond(new Atom('H'), 1), 1);
+
+                    return groupToAdd;
+                }
+            } else if (prefix.name == "butyyli") {
+                generator = function () {
+                    groupToAdd = new Atom('C');
+                    groupToAdd.addBond(new Atom('H'), 1);
+                    groupToAdd.addBond(new Atom('H'), 1);
+                    groupToAdd.addBond(new Atom('C').addBond(new Atom('H'), 1).addBond(new Atom('H'), 1).
+                                addBond(new Atom('C').addBond(new Atom('H'), 1).addBond(new Atom('H'), 1), 1), 1);
+                    return groupToAdd;
+                }
+            }
+            if (generator) {
+                var numList = prefix.numberList;
+                if (!numList) {
+                    numList = [1];
+                }
+                for (var n = 0; n < numList.length; n++) {
+                    var index = numList[n] - 1;
+                    primaryChain[index].addBond(generator());
+                }
+            }
+        }
+    }
+
+    // Add missing hydrogens from the primary carbon chain
+    for (i = 0 ; i < primaryChain.length; i++) {
+        var atom = primaryChain[i];
+        var missingH = 4 - atom.bonds.length;
+        for (var h = 0; h < missingH; h++) {
+            atom.addBond(new Atom('H'), 1);
+        }
     }
 
     return primaryChain[0];

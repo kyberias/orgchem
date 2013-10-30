@@ -12,7 +12,8 @@
         '(', ')', ',', '-', 'an',
         'bis','tris','tetrakis',
         'oli',
-        'fosfono-oksi', 'hydroksi'
+        'fosfono-oksi', 'hydroksi',
+        '0','1','2','3','4','5','6','7','8','9'
     ];
 
     function tokenIndex(token) {
@@ -24,8 +25,9 @@
     }
 
     function isDigit(aChar) {
-        var allowedChars = "0123456789";
-        return allowedChars.indexOf(aChar) != -1;
+        return false;
+//        var allowedChars = "0123456789";
+//        return allowedChars.indexOf(aChar) != -1;
     }
 
     exports.Tokenize = function (str) {
@@ -74,6 +76,7 @@
 
                 if (foundLen > 0) {
                     tokens.push(foundT);
+//                    console.log('Found token: ' + foundT);
                     i += (foundT.length - currToken.length);
                     currToken = '';
                 }

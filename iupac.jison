@@ -22,7 +22,7 @@ PLIST:
 
 PR:
     prefixname
-        { $$ = $1; }
+        { $$ = { name: $1 }; }
     |
     numberlist '-' prefixname
         { $$ = { numberList: $1, name: $3 }; }
@@ -136,7 +136,28 @@ secondarysuffix
 
 numberlist
     : NUMBER 
-    { $$ = [$1] }
+    { $$ = [$1]; }
     | numberlist ',' NUMBER
     { $$ =  $1.concat([$3]); }
+    ;
+
+NUMBER
+    : numeral NUMBER 
+        { $$ = parseInt($1 + $2); }
+    |
+    numeral
+        { $$ = parseInt($1); }
+        ;
+
+numeral:
+    '0' { $$ = '0'; }
+    | '1' { $$ = '1'; }
+    |'2' { $$ = '2'; }
+    |'3' { $$ = '3'; }
+    |'4' { $$ = '4'; }
+    |'5' { $$ = '5'; }
+    |'6' { $$ = '6'; }
+    |'7' { $$ = '7'; }
+    |'8' { $$ = '8'; }
+    | '9' { $$ = '9'; }
     ;
