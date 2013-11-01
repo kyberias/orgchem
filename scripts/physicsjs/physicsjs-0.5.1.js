@@ -3287,12 +3287,11 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
      * @param {Number|Physics.vector} x (optional) Either the x coord. Or a vector to copy.
      * @param {Number} y (optional) The y coord.
      */
-    var Vector = function Vector(x, y) {
-
+    var Vector = function Vector(x, y, z) {
         // enforce instantiation
         if ( !(this instanceof Vector) ){
 
-            return new Vector( x, y );
+            return new Vector( x, y, z );
         }
 
         // arrays to store values
@@ -3315,7 +3314,7 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
         } else {
 
             this.recalc = true; //whether or not recalculate norms
-            this.set( x || 0.0, y || 0.0 );
+            this.set( x || 0.0, y || 0.0, z || 0.0 );
         }
     };
 
@@ -3422,7 +3421,15 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
      */
     Vector.prototype.cross = function(v) {
 
+        // TODO: this is for 2D only!
+        console.log('cross');
         return ( - this._[0] * v._[1]) + (this._[1] * v._[0]);
+    };
+
+    Vector.prototype.cross3D = function (v) {
+        return new Vector(this._[1] * v._[2] - this._[2]*v._[1], 
+            this._[2] * v._[0] - this._[0] * v._[2],
+            this._[0] * v._[1] - this._[1] * v._[0]);
     };
 
     /**
@@ -3462,7 +3469,10 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
 
         } else {
 
-            if ( v && !v.equals( Vector.zero ) ){
+            if (v && !v.equals(Vector.zero)) {
+                //var a = acos(this.norm().dot(v.norm()));
+                var s = this.cross3D(v).
+
                 ang = atan2( this._[1] * v._[0] - this._[0] * v._[1], this._[0] * v._[0] + this._[1] * v._[1]);
             } else {
                 ang = atan2( this._[ 1 ], this._[ 0 ] );    

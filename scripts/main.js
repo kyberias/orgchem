@@ -46,7 +46,6 @@ function clearAll() {
 }
 
 function drawAtomPhysicsJs(from, atom, context) {
-    console.log('drawAtomPhysicsJs: ' + atom.element);
     if (atom.visited) {
         console.log('drawAtomPhysicsJs: visited');
         return atom.node;
@@ -70,6 +69,7 @@ function drawAtomPhysicsJs(from, atom, context) {
     var node = Physics.body('circle', {
         x: (context.carbon - 1) * 30 - (0.5 * (context.carbonNum - 1)) - 30 + context.sidegroups * 5,
         y: atom.primaryChain ? 0 : (context.sidegroups % 2 ? 1 : -1) * context.sidegroups * 30,
+        z: Math.random() * 200 - 100,
 //        x: (Math.random()-0.5)* 200 + 1024/2, // x-coordinate
 //        y: (Math.random()-0.5)* 200 + 768/2, // y-coordinate
         vx: 0, // velocity in x-direction
@@ -265,7 +265,7 @@ $(document).ready(function () {
                 drawBody: function (body, view) {
                     var pos = body.state.pos;
 
-                    view.position.set(pos.get(0), pos.get(1), 0);
+                    view.position.set(pos.get(0), pos.get(1), pos.get(2));
 
 //                    view.style[cssTransform] = 'translate(' + pos.get(0) + 'px,' + pos.get(1) + 'px) rotate(' + body.state.angular.pos + 'rad)';
                 }
@@ -353,7 +353,7 @@ $(document).ready(function () {
 
         world.add(verletConstraints);
         world.add(rigidConstraints);
-        world.add(edgeBounce);
+        //world.add(edgeBounce);
 
         // add some gravity
         var gravity = Physics.behavior('constant-acceleration', {
@@ -389,8 +389,8 @@ $(document).ready(function () {
                 }
 
                 orientMesh(c.geom, c.mesh,
-                    new THREE.Vector3(c.bodyA.state.pos.get(0), c.bodyA.state.pos.get(1), 0),
-                    new THREE.Vector3(c.bodyB.state.pos.get(0), c.bodyB.state.pos.get(1), 0));
+                    new THREE.Vector3(c.bodyA.state.pos.get(0), c.bodyA.state.pos.get(1), c.bodyA.state.pos.get(2)),
+                    new THREE.Vector3(c.bodyB.state.pos.get(0), c.bodyB.state.pos.get(1), c.bodyB.state.pos.get(2)));
             }
 
             // Point camera to mass center

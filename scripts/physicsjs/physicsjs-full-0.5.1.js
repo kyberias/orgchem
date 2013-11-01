@@ -3287,12 +3287,12 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
      * @param {Number|Physics.vector} x (optional) Either the x coord. Or a vector to copy.
      * @param {Number} y (optional) The y coord.
      */
-    var Vector = function Vector(x, y) {
+    var Vector = function Vector(x, y, z) {
 
         // enforce instantiation
         if ( !(this instanceof Vector) ){
 
-            return new Vector( x, y );
+            return new Vector( x, y, z );
         }
 
         // arrays to store values
@@ -3315,7 +3315,7 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
         } else {
 
             this.recalc = true; //whether or not recalculate norms
-            this.set( x || 0.0, y || 0.0 );
+            this.set( x || 0.0, y || 0.0, z || 0.0 );
         }
     };
 
@@ -3326,12 +3326,13 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
     /**
      * Sets the components of this Vector.
      */
-    Vector.prototype.set = function(x, y) {
+    Vector.prototype.set = function(x, y, z) {
 
         this.recalc = true;
 
         this._[0] = x || 0.0;
         this._[1] = y || 0.0;
+        this._[2] = z || 0.0;
         return this;
     };
 
@@ -3354,6 +3355,7 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
 
         this._[0] += v._[0];
         this._[1] += v._[1];
+        this._[2] += v._[2];
         return this;
     };
 
@@ -3366,6 +3368,7 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
 
         this._[0] -= v._[0];
         this._[1] -= v._[1];
+        this._[2] -= v._[2];
         return this;
     };
 
@@ -3378,18 +3381,20 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
 
         this._[0] += x;
         this._[1] += y === undefined? x : y;
+        this._[2] += (y === undefined && z === undefined) ? x : z;
         return this;
     };
 
     /**
      * Subtract scalars to Vector's components
      */
-    Vector.prototype.sub = function(x, y){
+    Vector.prototype.sub = function(x, y, z){
         
         this.recalc = true;
 
         this._[0] -= x;
         this._[1] -= y === undefined? x : y;
+        this._[2] -= (y === undefined && z === undefined) ? x : z;
         return this;
     };
 
@@ -3406,6 +3411,7 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
 
         this._[0] *= m;
         this._[1] *= m;
+        this._[2] *= m;
         return this;
     };
 
@@ -3414,7 +3420,7 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
      */
     Vector.prototype.dot = function(v) {
 
-        return (this._[0] * v._[0]) + (this._[1] * v._[1]);
+        return (this._[0] * v._[0]) + (this._[1] * v._[1]) + (this._[2] * v._[2]);
     };
 
     /** 
@@ -3423,6 +3429,12 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
     Vector.prototype.cross = function(v) {
 
         return ( - this._[0] * v._[1]) + (this._[1] * v._[0]);
+    };
+
+    Vector.prototype.cross3D = function (v) {
+        return new Vector(this._[1] * v._[2] - this._[2] * v._[1],
+            this._[2] * v._[0] - this._[0] * v._[2],
+            this._[0] * v._[1] - this._[1] * v._[0]);
     };
 
     /**
@@ -3462,10 +3474,13 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
 
         } else {
 
-            if ( v && !v.equals( Vector.zero ) ){
-                ang = atan2( this._[1] * v._[0] - this._[0] * v._[1], this._[0] * v._[0] + this._[1] * v._[1]);
+            if (v && !v.equals(Vector.zero)) {
+                console.log("angle");
+                var s = this.cross3D(v).norm();
+                var c = this.dot(v);
+                ang = atan2(s, c); //atan2( this._[1] * v._[0] - this._[0] * v._[1], this._[0] * v._[0] + this._[1] * v._[1]);
             } else {
-                ang = atan2( this._[ 1 ], this._[ 0 ] );    
+                ang = atan2( this._[ 1 ], this._[ 0 ] );
             }
         }
         
@@ -3487,6 +3502,7 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
      */
     Vector.prototype.angle2 = function( left, right ){
 
+        // TODO: 3D support
         var x1 = left._[0] - this._[0]
             ,y1 = left._[1] - this._[1]
             ,x2 = right._[0] - this._[0]
@@ -3512,7 +3528,7 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
 
         if (this.recalc){
             this.recalc = false;
-            this._[4] = (this._[0] * this._[0] + this._[1] * this._[1]);
+            this._[4] = (this._[0] * this._[0] + this._[1] * this._[1] + this._[2] * this._[2]);
             this._[3] = sqrt( this._[4] );
         }
         
@@ -3526,7 +3542,7 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
 
         if (this.recalc){
             this.recalc = false;
-            this._[4] = (this._[0] * this._[0] + this._[1] * this._[1]);
+            this._[4] = (this._[0] * this._[0] + this._[1] * this._[1] + this._[2] * this._[2]);
             this._[3] = sqrt( this._[4] );
         }
 
@@ -3538,10 +3554,11 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
      */
     Vector.prototype.dist = function(v) {
       
-        var dx, dy;
+        var dx, dy, dz;
         return sqrt(
             (dx = (v._[0] - this._[0])) * dx + 
-            (dy = (v._[1] - this._[1])) * dy
+            (dy = (v._[1] - this._[1])) * dy +
+            (dz = (v._[2] - this._[2])) * dz
         );
     };
 
@@ -3550,10 +3567,11 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
      */
     Vector.prototype.distSq = function(v) {
 
-        var dx, dy;
+        var dx, dy, dz;
         return (
             (dx = (v._[0] - this._[0])) * dx + 
-            (dy = (v._[1] - this._[1])) * dy
+            (dy = (v._[1] - this._[1])) * dy +
+            (dz = (v._[2] - this._[2])) * dz
         );
     };
 
@@ -3564,6 +3582,7 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
      */
     Vector.prototype.perp = function( neg ) {
 
+        console.log("perp"); // TODO: 3D
         var tmp = this._[0]
             ;
 
@@ -3599,6 +3618,7 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
 
         this._[0] /= m;
         this._[1] /= m;
+        this._[2] /= m;
 
         this._[3] = 1.0;
         this._[4] = 1.0;
@@ -3610,8 +3630,9 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
      * Apply a transform to this vector
      * @param  {Physics.transform} t The transform
      */
-    Vector.prototype.transform = function( t ){
 
+    Vector.prototype.transform = function( t ){
+        console.log("transform"); // TODO 3D!
         return this.set(
             (this._[ 0 ] - t.o._[ 0 ]) * t.cosA - (this._[ 1 ] - t.o._[ 1 ]) * t.sinA + t.v._[ 0 ] + t.o._[ 0 ], 
             (this._[ 0 ] - t.o._[ 0 ]) * t.sinA + (this._[ 1 ] - t.o._[ 1 ]) * t.cosA + t.v._[ 1 ] + t.o._[ 1 ]
@@ -3623,6 +3644,7 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
      * @param  {Physics.transform} t The transform
      */
     Vector.prototype.transformInv = function( t ){
+        console.log("transformInv"); // TODO 3D!
 
         return this.set(
             (this._[ 0 ] - t.o._[ 0 ]) * t.cosA + (this._[ 1 ] - t.o._[ 1 ]) * t.sinA - t.v._[ 0 ] + t.o._[ 0 ], 
@@ -3635,7 +3657,6 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
      * @param  {Physics.transform} t The transform
      */
     Vector.prototype.rotate = function( t ){
-
         return this.set(
             (this._[ 0 ] - t.o._[ 0 ]) * t.cosA - (this._[ 1 ] - t.o._[ 1 ]) * t.sinA + t.o._[ 0 ], 
             (this._[ 0 ] - t.o._[ 0 ]) * t.sinA + (this._[ 1 ] - t.o._[ 1 ]) * t.cosA + t.o._[ 1 ]
@@ -3647,7 +3668,6 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
      * @param  {Physics.transform} t The transform
      */
     Vector.prototype.rotateInv = function( t ){
-
         return this.set(
             (this._[ 0 ] - t.o._[ 0 ]) * t.cosA + (this._[ 1 ] - t.o._[ 1 ]) * t.sinA + t.o._[ 0 ], 
             -(this._[ 0 ] - t.o._[ 0 ]) * t.sinA + (this._[ 1 ] - t.o._[ 1 ]) * t.cosA + t.o._[ 1 ]
@@ -3685,18 +3705,19 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
 
             if (!v._){
 
-                return this.set( v.x, v.y );
+                return this.set( v.x, v.y, v.z );
             }
             
             this.recalc = v.recalc;
 
             if (!v.recalc){
                 this._[3] = v._[3];
-                this._[4] = v._[4];
+                this._[4] = v._[4]; // TODO: 3D changes?
             }
 
             this._[0] = v._[0];
             this._[1] = v._[1];
+            this._[2] = v._[2];
 
             return this;
         }
@@ -3728,7 +3749,8 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
 
         return {
             x: this._[0],
-            y: this._[1]
+            y: this._[1],
+            z: this._[2],
         };
     };
 
@@ -3743,6 +3765,7 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
 
         this._[0] = 0.0;
         this._[1] = 0.0;
+        this._[2] = 0.0;
         return this;
     };
 
@@ -3759,6 +3782,7 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
 
         this._[0] = -this._[0];
         this._[1] = -this._[1];
+        this._[2] = -this._[2];
         return this;
     };
 
@@ -3772,6 +3796,7 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
 
         this._[0] = min(max(this._[0], minV.x), maxV.x);
         this._[1] = min(max(this._[1], minV.y), maxV.y);
+        this._[2] = min(max(this._[2], minV.z), maxV.z);
         this.recalc = true;
         return this;
     };
@@ -3794,7 +3819,8 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
 
         return this._[0] === v._[0] &&
             this._[1] === v._[1] &&
-            this._[2] === v._[2];
+            this._[2] === v._[2] &&
+            this._[3] === v._[3];
     };
 
 
@@ -3805,17 +3831,17 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
     /** 
      * Return sum of two Vectors
      */
-    Vector.vadd = function(v1, v2) {
+    Vector.vadd = function(v1, v2, v3) {
 
-        return new Vector( v1._[0] + v2._[0], v1._[1] + v2._[1] );
+        return new Vector( v1._[0] + v2._[0], v1._[1] + v2._[1], v3 ? v1._[2] + v2._[2] : null );
     };
 
     /** 
      * Subtract v2 from v1
      */
-    Vector.vsub = function(v1, v2) {
+    Vector.vsub = function(v1, v2, v3) {
 
-        return new Vector( v1._[0] - v2._[0], v1._[1] - v2._[1] );
+        return new Vector( v1._[0] - v2._[0], v1._[1] - v2._[1], v3 ? v1._[2] - v2._[2] : null  );
     };
 
     /**
@@ -3823,7 +3849,7 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
      */
     Vector.mult = function(m, v1){
 
-        return new Vector( v1._[0]*m, v1._[1]*m );
+        return new Vector( v1._[0]*m, v1._[1]*m, v1._[2]*m );
     };
 
     /** 
@@ -3831,6 +3857,7 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
      */
     Vector.vproj = function(v1, v2) {
 
+// TODO: Check for 3D!
         return Vector.mult( v1.dot(v2) / v2.normSq(), v2 );
     };
 
@@ -3839,14 +3866,15 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
      * @type {Array}
      */
     Vector.axis = [
-        new Vector(1.0, 0.0),
-        new Vector(0.0, 1.0)
+        new Vector(1.0, 0.0, 0.0),
+        new Vector(0.0, 1.0, 0.0),
+        new Vector(0.0, 0.0, 1.0)
     ];
 
     /**
      * Zero vector for reference
      */
-    Vector.zero = new Vector(0, 0);
+    Vector.zero = new Vector(0, 0, 0);
 
     // assign
     Physics.vector = Vector;
@@ -3957,8 +3985,8 @@ var Decorator = Physics.util.decorator = function Decorator( type, baseProto ){
 
             // physical properties
             this.state = {
-                pos: vector( options.x, options.y ),
-                vel: vector( options.vx, options.vy ),
+                pos: vector( options.x, options.y, options.z ),
+                vel: vector( options.vx, options.vy, options.vz ),
                 acc: vector(),
                 angular: {
                     pos: options.angle || 0.0,
