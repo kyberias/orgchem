@@ -131,7 +131,7 @@ var center;
 
 var gCameraHeight = 200, gCameraDistance = 200;
 
-function orientMesh(geom, mesh, vstart, vend) {
+function orientMesh(geom, mesh, vstart, vend, len) {
     var HALF_PI = Math.PI * .5;
     var position = vend.clone().add(vstart).divideScalar(2);
     var rotationM = new THREE.Matrix4();
@@ -139,6 +139,7 @@ function orientMesh(geom, mesh, vstart, vend) {
     geom.applyMatrix(rotationM);
     mesh.lookAt(vstart);
     mesh.position = position;
+    mesh.scale.z = len;
     return;
 }
 
@@ -318,18 +319,21 @@ $(document).ready(function () {
             };
         });
 
-        world.add(Physics.behavior('parasitic-drag', { coeff: 0.01 }));
+
+        var dragRange = parseFloat($("#dragRange").val()) / 10000.0;
+        var drag = Physics.behavior('parasitic-drag', { coeff: dragRange });
+        world.add(drag);
+        $("#dragRange").change(function () {
+            drag.options.coeff = parseFloat($(this).val()) / 10000.0;
+            $('#dragLabel').html(drag.options.coeff);
+//            console.log("drag: " + drag.options.coeff.toString());
+        });
 
         var edgeBounce = Physics.behavior('edge-collision-detection', {
             aabb: Physics.aabb(0, 0, 1024, 768),
             restitution: 0.99,
             cof: 0.99
         });
-
-        /*world.subscribe('step', function () {
-            // Note: equivalent to just calling world.render() after world.step()
-            world.render();
-        });*/
 
         verletConstraints = Physics.behavior('verlet-constraints', {
             iterations: 2
@@ -365,7 +369,7 @@ $(document).ready(function () {
                 c = constrs[i];
 
                 if (!c.mesh) {
-                    var cyl = new THREE.CylinderGeometry(2, 2, c.targetLength);
+                    var cyl = new THREE.CylinderGeometry(2, 2, 1/*c.targetLength*/);
                     var material = new THREE.MeshLambertMaterial(
                         {
                             color: c.primaryChain ? 0xFFFF22 : 0xFF9999
@@ -378,7 +382,8 @@ $(document).ready(function () {
 
                 orientMesh(c.geom, c.mesh,
                     new THREE.Vector3(c.bodyA.state.pos.get(0), c.bodyA.state.pos.get(1), c.bodyA.state.pos.get(2)),
-                    new THREE.Vector3(c.bodyB.state.pos.get(0), c.bodyB.state.pos.get(1), c.bodyB.state.pos.get(2)));
+                    new THREE.Vector3(c.bodyB.state.pos.get(0), c.bodyB.state.pos.get(1), c.bodyB.state.pos.get(2)),
+                    c.bodyA.state.pos.dist(c.bodyB.state.pos));
             }
 
             // Point camera to mass center
@@ -459,6 +464,7 @@ var ExampleNames = [
 
 "cyclopentaani",
 "cycloheksaani",
+"cycloeikosaani",
 
 "5-etyyli-2-metyyliheptaani",
 
@@ -480,7 +486,6 @@ var ExampleNames = [
         molSelect.val(ExampleNames[parseInt(Math.random() * ExampleNames.length)]);
 
         var molChanged = function() {
-            console.log('select change')
             $( "select option:selected" ).each(function() {
                   $('#iupacName').val($( this ).text());
                   $('#parseButton').click();
