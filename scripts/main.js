@@ -201,13 +201,13 @@ $(document).ready(function () {
                     // add to the scene
                     this.scene.add(pointLight);
 
-                    var ambientLight = new THREE.AmbientLight(0x111111);
+                    var ambientLight = new THREE.AmbientLight(0x222222);
                     this.scene.add(ambientLight);
 
                     this.renderer = new THREE.WebGLRenderer({ antialias: true });
                     this.renderer.setSize(1024, 768);
                     // Set the background color of the scene.
-                    this.renderer.setClearColor(0x333333, 1);
+                    this.renderer.setClearColor(0x111111, 1);
 
                     $('#3dcontainer').append(this.renderer.domElement);
                 },
