@@ -450,7 +450,7 @@ var ExampleNames = [
 "metyylicycloetaani",
 "metyylietanoli",
 "metyylietan-2,2-oli",
-"3-metyylietan-2,2-oli",
+//"3-metyylietan-2,2-oli",
 "oktaani",
 
 "1,4-dietyyli-5-metyylioktaani",
@@ -477,23 +477,25 @@ var ExampleNames = [
             molSelect.append(new Option(ExampleNames[i], ExampleNames[i]));
         }
 
-        $("#moleculeselect").chosen({
-            //disable_search_threshold: 10,
-            no_results_text: "Oops, nothing found!",
-            search_contains: true
-            //width: "95%"
-          }).change( function() {
+        molSelect.val(ExampleNames[parseInt(Math.random() * ExampleNames.length)]);
+
+        var molChanged = function() {
+            console.log('select change')
             $( "select option:selected" ).each(function() {
                   $('#iupacName').val($( this ).text());
                   $('#parseButton').click();
-//                  str += $( this ).text() + " ";
                 });
-              } );
+              };
+
+        $("#moleculeselect").chosen({
+            no_results_text: "Oops, nothing found!",
+            search_contains: true
+          }).change( molChanged );
 
         $("#parseButton").click(function () {
             parse($('#iupacName').val());
         });
 
-        parse($('#iupacName').val());
+        molChanged();
     });
 });
