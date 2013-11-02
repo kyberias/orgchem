@@ -4,7 +4,7 @@
 
 iupacname 
     : PLIST infix rootword primarysuffix secondarysuffix
-        { return { prefix: $1, infix: $2, rootword: $3, primarysuffix: $4 }; }
+        { return { prefix: $1, infix: $2, rootword: $3, primarysuffix: $4, secondarysuffix: $5 }; }
         ;
 
 PLIST:
@@ -128,9 +128,9 @@ primarysuffix
     ;
 
 secondarysuffix
-    : '-' numberlist '-' 'oli' { $$ = 'oli' }
+    : '-' numberlist '-' 'oli' { $$ = { name: 'oli', numberlist: $2 } }
     | 
-    'oli' { $$ = 'oli' }
+    'oli' { $$ = { name: 'oli' } }
     |
     ;
 

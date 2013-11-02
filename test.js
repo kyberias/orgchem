@@ -62,6 +62,12 @@ function organicNameToMolecyle(parsedMolecule) {
         prevAtom.addBond(primaryChain[0]);
     }
 
+    if(parsedMolecule.secondarysuffix) {
+        if(parsedMolecule.secondarysuffix.name == 'oli') {
+            primaryChain[primaryChain.length-1].addBond(new Atom('O').addBond(new Atom('H'), 1), 1);
+        }
+    }
+
     if (parsedMolecule.prefix) {
         var p;
         for (p = 0; p < parsedMolecule.prefix.length; p++) {
@@ -90,7 +96,7 @@ function organicNameToMolecyle(parsedMolecule) {
                     groupToAdd.addBond(new Atom('H'), 1);
                     groupToAdd.addBond(new Atom('H'), 1);
                     groupToAdd.addBond(new Atom('C').addBond(new Atom('H'), 1).addBond(new Atom('H'), 1).
-                                addBond(new Atom('C').addBond(new Atom('H'), 1).addBond(new Atom('H'), 1), 1), 1);
+                                addBond(new Atom('C').addBond(new Atom('H'), 1).addBond(new Atom('H'), 1).addBond(new Atom('H'), 1), 1), 1);
                     return groupToAdd;
                 }
             }

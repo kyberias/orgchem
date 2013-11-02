@@ -78,6 +78,7 @@ function drawAtomPhysicsJs(from, atom, context) {
         mass: mass,
         color: color
     });
+    node.geometry.atom = atom;
     atom.node = node;
     gworld.add(node);
     allBodies.push(node);
@@ -200,10 +201,13 @@ $(document).ready(function () {
                     // add to the scene
                     this.scene.add(pointLight);
 
+                    var ambientLight = new THREE.AmbientLight(0x111111);
+                    this.scene.add(ambientLight);
+
                     this.renderer = new THREE.WebGLRenderer({ antialias: true });
                     this.renderer.setSize(1024, 768);
                     // Set the background color of the scene.
-                    this.renderer.setClearColor(0x111111, 1);
+                    this.renderer.setClearColor(0x333333, 1);
 
                     $('#3dcontainer').append(this.renderer.domElement);
                 },
@@ -222,8 +226,8 @@ $(document).ready(function () {
                         var sphere = new THREE.SphereGeometry(geometry.radius, 20, 10);
                         var material = new THREE.MeshPhongMaterial(
                             {
-                                color: 0x55FFFF,
-                                specular: 0x00FF00//geometry.body.options.color
+                                color: geometry.atom.element == 'O' ? 0x5555FF : (geometry.atom.element == 'C' ? 0x55FF55 : 0xEEEEEE),
+                                //specular: 0x00FF00//geometry.body.options.color
                             });
                         mesh = new THREE.Mesh(sphere, material);
                         this.scene.add(mesh);
@@ -372,7 +376,7 @@ $(document).ready(function () {
                     var cyl = new THREE.CylinderGeometry(2, 2, 1/*c.targetLength*/);
                     var material = new THREE.MeshLambertMaterial(
                         {
-                            color: c.primaryChain ? 0xFFFF22 : 0xFF9999
+                            color: c.primaryChain ? 0xFFFF22 : 0xAAAAAA
                         });
                     var mesh = new THREE.Mesh(cyl, material);
                     renderer.scene.add(mesh);
@@ -474,7 +478,8 @@ var ExampleNames = [
 "2,7,8-trimetyylidekaani",
 "3-etyyli-6-isopropyyli-2,8-dimetyylinonaani",
 
-"5,5-bis(1,2-dimetyylipropyyli)nonaani"
+"5,5-bis(1,2-dimetyylipropyyli)nonaani",
+"pentakontaani"
 ];
 
         var molSelect = $("#moleculeselect");

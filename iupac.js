@@ -9,7 +9,7 @@ performAction: function anonymous(yytext,yyleng,yylineno,yy,yystate,$$,_$) {
 
 var $0 = $$.length - 1;
 switch (yystate) {
-case 1: return { prefix: $$[$0-4], infix: $$[$0-3], rootword: $$[$0-2], primarysuffix: $$[$0-1] }; 
+case 1: return { prefix: $$[$0-4], infix: $$[$0-3], rootword: $$[$0-2], primarysuffix: $$[$0-1], secondarysuffix: $$[$0] }; 
 break;
 case 2: this.$ = $$[$0]; 
 break;
@@ -93,9 +93,9 @@ case 50: this.$ = 'yyni'
 break;
 case 51: this.$ = 'yyni' 
 break;
-case 52: this.$ = 'oli' 
+case 52: this.$ = { name: 'oli', numberlist: $$[$0-2] } 
 break;
-case 53: this.$ = 'oli' 
+case 53: this.$ = { name: 'oli' } 
 break;
 case 55: this.$ = [$$[$0]]; 
 break;
