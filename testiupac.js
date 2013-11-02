@@ -26,7 +26,7 @@ var PassTests = [
 
 "5-etyyli-2-metyyliheptaani",
 
-"4-etyyli-1,6-dibutyyli-5-(1,2-dimetyylipropyyli)nonaani",
+"4-etyyli-1,6-dibutyyli-5-(1,2-dimetyylipropyyli)eikosaani",
 "3,5-dimetyyli-4-propyyliheptaani",
 "2,3,3-trimetyyliheksaani",
 "2,7,8-trimetyylidekaani",

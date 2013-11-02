@@ -88,7 +88,9 @@ function drawAtomPhysicsJs(from, atom, context) {
         if (otherAtom != from) {
             var n = drawAtomPhysicsJs(atom, otherAtom, context);
             if (n) {
-                constraints.push(verletConstraints.distanceConstraint(node, n, 0.9, 30));
+                var constraint = verletConstraints.distanceConstraint(node, n, 0.9, 30);
+                constraint.primaryChain = atom.primaryChain && otherAtom.primaryChain;
+                constraints.push(constraint);
             }
 //            graph.newEdge(node, n, { directional: false });
         }
@@ -143,21 +145,10 @@ function orientMesh(geom, mesh, vstart, vend) {
 $(document).ready(function () {
     graph = new Springy.Graph();
 
-    $("#parseButton").click(function () {
-        parse($('#iupacName').val());
-    });
-
-    //paper = Raphael(10, 50, 320, 200);
-
     iupac.lexer = {
         lex: function () { return tokens.shift(); },
         setInput: function (str) { tokens = scanner.Tokenize(str) }
     }
-
-    //$('#springycanvas').springy({ graph: graph });
-
-    //initThree();
-//    return;
 
     Physics(function (world) {
         gworld = world;
@@ -266,13 +257,10 @@ $(document).ready(function () {
                     var pos = body.state.pos;
 
                     view.position.set(pos.get(0), pos.get(1), pos.get(2));
-
-//                    view.style[cssTransform] = 'translate(' + pos.get(0) + 'px,' + pos.get(1) + 'px) rotate(' + body.state.angular.pos + 'rad)';
                 }
             };
         });
 
-//        var renderer = Physics.renderer('canvas', {
         var renderer = Physics.renderer('canvasWebGL', {
                 el: 'springycanvas',
             width: 1024,
@@ -380,7 +368,7 @@ $(document).ready(function () {
                     var cyl = new THREE.CylinderGeometry(2, 2, c.targetLength);
                     var material = new THREE.MeshLambertMaterial(
                         {
-                            color: 0xFF9999
+                            color: c.primaryChain ? 0xFFFF22 : 0xFF9999
                         });
                     var mesh = new THREE.Mesh(cyl, material);
                     renderer.scene.add(mesh);
@@ -453,6 +441,57 @@ $(document).ready(function () {
 
         $("#stopButton").click(function () {
             Physics.util.ticker.stop();
+        });
+
+var ExampleNames = [
+"pentadekaani",
+"undekaani",
+"dekaani",
+"metyylicycloetaani",
+"metyylietanoli",
+"metyylietan-2,2-oli",
+"3-metyylietan-2,2-oli",
+"oktaani",
+
+"1,4-dietyyli-5-metyylioktaani",
+"5-metyylihepteeni",
+"6-metyylihept-3-eeni",
+
+"cyclopentaani",
+"cycloheksaani",
+
+"5-etyyli-2-metyyliheptaani",
+
+"4-etyyli-1,6-dibutyyli-5-(1,2-dimetyylipropyyli)eikosaani",
+"3,5-dimetyyli-4-propyyliheptaani",
+"2,3,3-trimetyyliheksaani",
+"2,7,8-trimetyylidekaani",
+"3-etyyli-6-isopropyyli-2,8-dimetyylinonaani",
+
+"5,5-bis(1,2-dimetyylipropyyli)nonaani"
+];
+
+        var molSelect = $("#moleculeselect");
+
+        for(var i=0;i<ExampleNames.length;i++) {
+            molSelect.append(new Option(ExampleNames[i], ExampleNames[i]));
+        }
+
+        $("#moleculeselect").chosen({
+            //disable_search_threshold: 10,
+            no_results_text: "Oops, nothing found!",
+            search_contains: true
+            //width: "95%"
+          }).change( function() {
+            $( "select option:selected" ).each(function() {
+                  $('#iupacName').val($( this ).text());
+                  $('#parseButton').click();
+//                  str += $( this ).text() + " ";
+                });
+              } );
+
+        $("#parseButton").click(function () {
+            parse($('#iupacName').val());
         });
 
         parse($('#iupacName').val());
