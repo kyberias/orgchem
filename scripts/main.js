@@ -24,6 +24,7 @@ var grenderer;
 var verletConstraints;
 var allBodies = [];
 var constraints = [];
+primaryChainAtoms = [];
 
 function clearAll() {
     var i;
@@ -43,6 +44,7 @@ function clearAll() {
         verletConstraints.remove(cons);
     }
     constraints = [];
+    primaryChainAtoms = [];
 }
 
 function drawAtomPhysicsJs(from, atom, context) {
@@ -62,6 +64,7 @@ function drawAtomPhysicsJs(from, atom, context) {
     if (atom.primaryChain) {
         context.carbon++;
         context.sidegroups = 0;
+        primaryChainAtoms.push(atom);
     } else {
         context.sidegroups++;
     }
@@ -130,7 +133,10 @@ function parse(str) {
 var corners = [];
 var center;
 
-var gCameraHeight = 200, gCameraDistance = 200;
+var gCameraHeight = 200,
+ gCameraDistance = 200,
+ gCameraRotationAngle = 0,
+ gCameraLiftAngle = 0;
 
 function orientMesh(geom, mesh, vstart, vend, len) {
     var HALF_PI = Math.PI * .5;
@@ -391,7 +397,7 @@ $(document).ready(function () {
             }
 
             // Point camera to mass center
-            var totalMass = 0;
+            /*var totalMass = 0;
             var scratch = Physics.scratchpad();
             var massCenter = scratch.vector();
             var pos = scratch.vector();
@@ -400,14 +406,29 @@ $(document).ready(function () {
                 pos.mult(data.bodies[i].mass);
                 massCenter.vadd(pos);
                 totalMass += data.bodies[i].mass;
+            }*/
+
+            if(primaryChainAtoms.length > 0)
+            {
+            var midAtom = primaryChainAtoms[parseInt(primaryChainAtoms.length / 2)];
+            var midPos = midAtom.node.state.pos;
+
+            //renderer.camera.lookAt(new THREE.Vector3(massCenter.get(0) / totalMass, massCenter.get(1) / totalMass, 0));
+            //renderer.camera.lookAt(new THREE.Vector3(midPos.get(0),midPos.get(1), midPos.get(2)));
+
+            for (var i = 0; i < data.bodies.length; i++) {
+                data.bodies[i].state.pos.vsub(midPos);
             }
 
-            renderer.camera.lookAt(new THREE.Vector3(massCenter.get(0) / totalMass, massCenter.get(1) / totalMass, 0));
+            renderer.camera.position.x = 0;
+            renderer.camera.position.y = 0;
+            //renderer.camera.position.x = massCenter.get(0) / totalMass;
+            //renderer.camera.position.y = massCenter.get(1) / totalMass - gCameraHeight * 500;
+            renderer.camera.position.z = gCameraDistance * 100;
 
-            renderer.camera.position.x = massCenter.get(0) / totalMass;
-            renderer.camera.position.y = massCenter.get(1) / totalMass - gCameraHeight * 500;
-            renderer.camera.position.z = gCameraDistance * 500;
-            scratch.done();
+            renderer.camera.lookAt(new THREE.Vector3(0,0,0));
+            }
+            //scratch.done();
         });
 
         /*Physics.util.ticker.subscribe(function (time, dt) {
@@ -450,6 +471,19 @@ $(document).ready(function () {
 
         $("#stopButton").click(function () {
             Physics.util.ticker.stop();
+        });
+
+        $('#3dcontainer').bind('mousewheel', function(e){
+            if(e.originalEvent.wheelDelta /120 > 0) {
+                gCameraDistance --;
+                if(gCameraDistance < 1) {
+                    gCameraDistance = 1;
+                }
+            }
+            else {
+                gCameraDistance ++;
+            }
+            return false;
         });
 
 var ExampleNames = [
