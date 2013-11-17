@@ -41,9 +41,6 @@ PL2:
     PL2 PR
         { $$ = [$1].concat($2); }
     ;
-/*
-4-etyyli-5-(1,2-dimetyylibutyyli)nonaani
-*/
 
 prefixnum2:
     'bis' | 'tris' | 'tetrakis'
@@ -119,12 +116,12 @@ rootword
     ;
 
 primarysuffix
-    : 'aani' { $$ = 'aani' }
-    | 'an' { $$ = 'an' }
-    | 'eeni' { $$ = 'eeni' }
-    | '-' NUMBER '-' 'eeni' { $$ = 'eeni' }
-    | 'yyni' { $$ = 'yyni' }
-    | '-' NUMBER '-' 'yyni' { $$ = 'yyni' }
+    : 'aani' { $$ = { type: 'aani' } }
+    | 'an' { $$ = { type: 'aani' } }
+    | 'eeni' { $$ = { type: 'eeni' } }
+    | '-' numberlist '-' 'eeni' { $$ = { type: 'eeni', numberlist: $2 } }
+    | 'yyni' { $$ = { type: 'yyni' } }
+    | '-' numberlist '-' 'yyni' { $$ = { type: 'yyni', numberlist: $2 } }
     ;
 
 secondarysuffix

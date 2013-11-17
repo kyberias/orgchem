@@ -32,7 +32,10 @@ var PassTests = [
 "2,7,8-trimetyylidekaani",
 "3-etyyli-6-isopropyyli-2,8-dimetyylinonaani",
 
-"5,5-bis(1,2-dimetyylipropyyli)nonaani"
+"5,5-bis(1,2-dimetyylipropyyli)nonaani",
+"propeeni",
+"hepteeni",
+"hept-1,2-eeni",
 
 //"5,5-Bis(1,2-dimetyylipropyyli)nonaani"
 //,

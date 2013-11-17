@@ -22,6 +22,15 @@ function Atom(element) {
         atom.bonds.push(bond);
         return self;
     }
+
+    this.bondElectrons = function() {
+        var n=0;
+        for(var i=0;i<self.bonds.length;i++)
+        {
+            n+=self.bonds[i].level;
+        }
+        return n;
+    }
 }
 
 function organicNameToMolecyle(parsedMolecule) {
@@ -31,35 +40,33 @@ function organicNameToMolecyle(parsedMolecule) {
 
     primaryChain = [];
     var prevAtom;
+
+    var doubleBondLocations = [];
+
+    if(parsedMolecule.primarysuffix && parsedMolecule.primarysuffix.type == 'eeni')
+    {
+        if(parsedMolecule.primarysuffix.numberlist) {
+            doubleBondLocations = parsedMolecule.primarysuffix.numberlist;
+        } else {
+            doubleBondLocations.push(1);
+        }
+    }
+
     for (i = 0; i < carbonNum; i++) {
         var atom = new Atom('C');
         atom.primaryChain = true;
 
         primaryChain.push(atom);
         if (prevAtom) {
-            atom.addBond(prevAtom, 1);
-//            atom.addBond(new Atom('H'), 1);
-//            atom.addBond(new Atom('H'), 1);
-
-        } else {
-//            atom.addBond(new Atom('H'), 1);
-//            atom.addBond(new Atom('H'), 1);
-/*            if (parsedMolecule.infix != "cyclo") {
-                atom.addBond(new Atom('H'), 1);
-            }*/
+            atom.addBond(prevAtom, doubleBondLocations.indexOf(i) != -1 ? 2 : 1);
         }
-
-/*        if (i + 1 == carbonNum && parsedMolecule.infix != "cyclo")
-        {
-            atom.addBond(new Atom('H'), 1);
-        }*/
 
         prevAtom = atom;
     }
 
     if (parsedMolecule.infix == "cyclo") {
         // Complete the cycle.
-        prevAtom.addBond(primaryChain[0]);
+        prevAtom.addBond(primaryChain[0],1);
     }
 
     if(parsedMolecule.secondarysuffix) {
@@ -116,7 +123,7 @@ function organicNameToMolecyle(parsedMolecule) {
     // Add missing hydrogens from the primary carbon chain
     for (i = 0 ; i < primaryChain.length; i++) {
         var atom = primaryChain[i];
-        var missingH = 4 - atom.bonds.length;
+        var missingH = 4 - atom.bondElectrons(); //atom.bonds.length;
         for (var h = 0; h < missingH; h++) {
             atom.addBond(new Atom('H'), 1);
         }

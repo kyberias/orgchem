@@ -24,6 +24,7 @@ var grenderer;
 var verletConstraints;
 var allBodies = [];
 var constraints = [];
+var constraintsData = [];
 primaryChainAtoms = [];
 
 function clearAll() {
@@ -43,7 +44,15 @@ function clearAll() {
         }
         verletConstraints.remove(cons);
     }
+
+    for(i=0;i<constraintsData.length;i++) {
+        var cons = constraintsData[i];
+        if (cons.mesh) {
+            grenderer.scene.remove(cons.mesh);
+        }
+    }
     constraints = [];
+    constraintsData = [];
     primaryChainAtoms = [];
 }
 
@@ -54,8 +63,6 @@ function drawAtomPhysicsJs(from, atom, context) {
     }
     atom.visited = true;
     var b;
-
-//    var node = graph.newNode({ label: atom.element });
 
     var radius = atom.element == 'H' ? 4 : 8;
     var mass = atom.element == 'H' ? 3 : 1;
@@ -95,8 +102,19 @@ function drawAtomPhysicsJs(from, atom, context) {
                 var constraint = verletConstraints.distanceConstraint(node, n, 0.9, 30);
                 constraint.primaryChain = atom.primaryChain && otherAtom.primaryChain;
                 constraints.push(constraint);
+                constraintsData.push({ 
+                    bodyA : n, 
+                    bodyB: node,
+                    bond: bond,
+                    primaryChain: atom.primaryChain && otherAtom.primaryChain 
+                });
+                console.log('constraint created ' + constraintsData.length);
+
+                // angle constraint probably broken in 3D
+                /*if(bond.level == 2) {
+                    verletConstraints.angleConstraint(node, node, n, 1, 2 * Math.PI);
+                }*/
             }
-//            graph.newEdge(node, n, { directional: false });
         }
     }
 
@@ -104,8 +122,6 @@ function drawAtomPhysicsJs(from, atom, context) {
 }
 
 function parse(str) {
-    graph.nodes = [];
-    graph.edges = [];
     $("#errorMsg").text('');
 
     try {
@@ -125,16 +141,13 @@ function parse(str) {
             sidegroups: 0
         });
     return atom;
-
-    //paper.clear();
-    //renderAtom(atom, paper, 20, 50);
 }
 
 var corners = [];
 var center;
 
 var gCameraHeight = 200,
- gCameraDistance = 200,
+ gCameraDistance = 3,
  gCameraRotationAngle = 0,
  gCameraLiftAngle = 0;
 
@@ -144,15 +157,14 @@ function orientMesh(geom, mesh, vstart, vend, len) {
     var rotationM = new THREE.Matrix4();
     rotationM.makeRotationX(HALF_PI);//rotate 90 degs on X
     geom.applyMatrix(rotationM);
+
     mesh.lookAt(vstart);
-    mesh.position = position;
+    mesh.position.set(position.x, position.y, position.z);// = position;
     mesh.scale.z = len;
     return;
 }
 
 $(document).ready(function () {
-    graph = new Springy.Graph();
-
     iupac.lexer = {
         lex: function () { return tokens.shift(); },
         setInput: function (str) { tokens = scanner.Tokenize(str) }
@@ -181,20 +193,13 @@ $(document).ready(function () {
                     this.camera = new THREE.PerspectiveCamera(75, 1024 / 768, 1, 10000);
                     this.camera.position.x = 0;
                     this.camera.position.y = 0;
-                    this.camera.position.z = gCameraDistance * 500;
+                    this.camera.position.z = gCameraDistance * 100;
 
                     this.camera.up.set(0, 1, 0);
 
                     this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
                     this.scene = new THREE.Scene();
-
-/*                    this.material = new THREE.MeshPhongMaterial({ color: 0x888800 });
-                    this.material.side = THREE.DoubleSide;
-
-                    var globe = new THREE.SphereGeometry(1000, 200, 100);
-                    var mesh = new THREE.Mesh(globe, this.material);
-                    this.scene.add(mesh);*/
 
                    // create a point light
                     var pointLight = new THREE.PointLight(0xFFFFFF);
@@ -230,6 +235,7 @@ $(document).ready(function () {
                     if (geometry.name == 'circle') {
                         //var geometry = new THREE.CubeGeometry(20, 20, 20);
                         var sphere = new THREE.SphereGeometry(geometry.radius, 20, 10);
+                        //sphere.dynamic = true;
                         var material = new THREE.MeshPhongMaterial(
                             {
                                 color: geometry.atom.element == 'O' ? 0x5555FF : (geometry.atom.element == 'C' ? 0x55FF55 : 0xEEEEEE),
@@ -268,12 +274,13 @@ $(document).ready(function () {
                     var pos = body.state.pos;
 
                     view.position.set(pos.get(0), pos.get(1), pos.get(2));
+                    //console.log('drawBody');
                 }
             };
         });
 
         var renderer = Physics.renderer('canvasWebGL', {
-                el: 'springycanvas',
+            el: 'springycanvas',
             width: 1024,
             height: 768,
             meta: false, // don't display meta data
@@ -339,12 +346,6 @@ $(document).ready(function () {
 //            console.log("drag: " + drag.options.coeff.toString());
         });
 
-        var edgeBounce = Physics.behavior('edge-collision-detection', {
-            aabb: Physics.aabb(0, 0, 1024, 768),
-            restitution: 0.99,
-            cof: 0.99
-        });
-
         verletConstraints = Physics.behavior('verlet-constraints', {
             iterations: 2
         });
@@ -355,14 +356,23 @@ $(document).ready(function () {
 
         world.add(verletConstraints);
         world.add(rigidConstraints);
-        //world.add(edgeBounce);
+        
+        /*var edgeBounce = Physics.behavior('edge-collision-detection', {
+            aabb: Physics.aabb(0, 0, 1024, 768),
+            restitution: 0.99,
+            cof: 0.99
+        });
+
+        world.add(edgeBounce);*/
 
         // add some gravity
-        var gravity = Physics.behavior('constant-acceleration', {
+        /*var gravity = Physics.behavior('constant-acceleration', {
             acc: { x: 0, y: 0.004 } // this is the default
         });
-        //gravity.setAcceleration({ x: 0, y: 0.0004 });
-  //      world.add(gravity);
+        gravity.setAcceleration({ x: 0, y: 0.0004 });
+        world.add(gravity);*/
+
+
         world.add(Physics.behavior('newtonian', { strength: -5 }));
 //        world.add(Physics.behavior('body-impulse-response'));
 
@@ -374,15 +384,17 @@ $(document).ready(function () {
             ;
 
             // render the "branches"
-            for (var i = 0, l = constrs.length; i < l; ++i) {
+            for (var i = 0, l = constraintsData.length; i < l; ++i) {
 
-                c = constrs[i];
+                c = constraintsData[i];
 
                 if (!c.mesh) {
-                    var cyl = new THREE.CylinderGeometry(2, 2, 1/*c.targetLength*/);
+                    var diameter = c.bond.level == 2 ? 3 : 1.5;
+                    console.log("bond level: " + c.bond.level);
+                    var cyl = new THREE.CylinderGeometry(diameter, diameter, 1);
                     var material = new THREE.MeshLambertMaterial(
                         {
-                            color: c.primaryChain ? 0xFFFF22 : 0xAAAAAA
+                            color: c.primaryChain ? (c.bond.level == 2 ? 0xFFAA22 : 0xFFFF22) : 0xAAAAAA
                         });
                     var mesh = new THREE.Mesh(cyl, material);
                     renderer.scene.add(mesh);
@@ -408,26 +420,26 @@ $(document).ready(function () {
                 totalMass += data.bodies[i].mass;
             }*/
 
-            if(primaryChainAtoms.length > 0)
-            {
-            var midAtom = primaryChainAtoms[parseInt(primaryChainAtoms.length / 2)];
-            var midPos = midAtom.node.state.pos;
+            if(primaryChainAtoms.length > 0) {
+                var midAtom = primaryChainAtoms[parseInt(primaryChainAtoms.length / 2)];
+                var midPos = midAtom.node.state.pos;
 
-            //renderer.camera.lookAt(new THREE.Vector3(massCenter.get(0) / totalMass, massCenter.get(1) / totalMass, 0));
-            //renderer.camera.lookAt(new THREE.Vector3(midPos.get(0),midPos.get(1), midPos.get(2)));
+                //renderer.camera.lookAt(new THREE.Vector3(massCenter.get(0) / totalMass, massCenter.get(1) / totalMass, 0));
+                //renderer.camera.lookAt(new THREE.Vector3(midPos.get(0),midPos.get(1), midPos.get(2)));
 
-            for (var i = 0; i < data.bodies.length; i++) {
-                data.bodies[i].state.pos.vsub(midPos);
+                for (var i = 0; i < data.bodies.length; i++) {
+                    data.bodies[i].state.pos.vsub(midPos);
+                }
+
+                renderer.camera.position.x = 0;
+                renderer.camera.position.y = 0;
+                //renderer.camera.position.x = massCenter.get(0) / totalMass;
+                //renderer.camera.position.y = massCenter.get(1) / totalMass - gCameraHeight * 500;
+                renderer.camera.position.z = gCameraDistance * 100;
+
+                renderer.camera.lookAt(new THREE.Vector3(0,0,0));
             }
 
-            renderer.camera.position.x = 0;
-            renderer.camera.position.y = 0;
-            //renderer.camera.position.x = massCenter.get(0) / totalMass;
-            //renderer.camera.position.y = massCenter.get(1) / totalMass - gCameraHeight * 500;
-            renderer.camera.position.z = gCameraDistance * 100;
-
-            renderer.camera.lookAt(new THREE.Vector3(0,0,0));
-            }
             //scratch.done();
         });
 
@@ -439,17 +451,18 @@ $(document).ready(function () {
         // start the ticker
         Physics.util.ticker.start();*/
 
+        var stepWorld = true;
+
         var animate = function () {
             requestAnimationFrame(animate);
 
-            //mesh.rotation.x += 0.01;
-            //mesh.rotation.y += 0.02;
-            //renderer.camera.rotation.x += 0.01;
-            //renderer.camera.rotation.y += 0.02;
-
-            world.step(new Date().getTime());
+            if(stepWorld) {
+                world.step(new Date().getTime());
+            }
             world.render();
+            renderer.renderer.render(renderer.scene, renderer.camera);
 
+            world.render();
             renderer.renderer.render(renderer.scene, renderer.camera);
         };
 
@@ -460,33 +473,37 @@ $(document).ready(function () {
             gCameraHeight = parseFloat($(this).val()) / 1000.0;
         });
 
-        gCameraDistance = parseFloat($("#cameraDistance").val()) / 1000.0;
+        /*gCameraDistance = parseFloat($("#cameraDistance").val()) / 1000.0;
         $("#cameraDistance").change(function () {
             gCameraDistance = parseFloat($(this).val()) / 1000.0;
-        });
+        });*/
 
         $("#startButton").click(function () {
-            Physics.util.ticker.start();
+            stepWorld = true;
+            //Physics.util.ticker.start();
         });
 
         $("#stopButton").click(function () {
-            Physics.util.ticker.stop();
+            stepWorld = false;
+            //Physics.util.ticker.stop();
         });
 
         $('#3dcontainer').bind('mousewheel', function(e){
             if(e.originalEvent.wheelDelta /120 > 0) {
-                gCameraDistance --;
+                gCameraDistance--;
                 if(gCameraDistance < 1) {
                     gCameraDistance = 1;
                 }
             }
             else {
-                gCameraDistance ++;
+                gCameraDistance++;
             }
             return false;
         });
 
 var ExampleNames = [
+"etanoli",
+"hept-2,4-eeni",
 "pentadekaani",
 "undekaani",
 "dekaani",
