@@ -120,6 +120,12 @@ function organicNameToMolecule(parsedMolecule) {
         }
     }
 
+    addMissingHydrogens(primaryChain);
+
+    return primaryChain[0];
+}
+
+function addMissingHydrogens(primaryChain) {
     // Add missing hydrogens from the primary carbon chain
     for (i = 0 ; i < primaryChain.length; i++) {
         var atom = primaryChain[i];
@@ -128,8 +134,6 @@ function organicNameToMolecule(parsedMolecule) {
             atom.addBond(new Atom('H'), 1);
         }
     }
-
-    return primaryChain[0];
 }
 
 function countConnectedAtoms(atom, notThis) {

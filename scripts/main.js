@@ -124,23 +124,57 @@ function drawAtomPhysicsJs(from, atom, context) {
 function parse(str) {
     $("#errorMsg").text('');
 
+    var atom;
+
     try {
-        data = iupac.parse(str);
+        atom = organicNameToMolecule(iupac.parse(str));
     } catch (ex) {
-        $("#errorMsg").text(ex);
-        return;
+
+        var json = Parser.parse(str);
+        atom = jsonToMolecule(json);
+
+        // TODO: Error handling.
+        //$("#errorMsg").text(ex);
     }
 
-    var atom = organicNameToMolecule(data);
+//    var atom = organicNameToMolecule(data);
 
     clearAll();
     drawAtomPhysicsJs(null, atom,
         {
-            carbonNum: data.rootword,
+            // TODO: Get rid of this?
+            carbonNum: 10,//data.rootword,
             carbon: 0,
             sidegroups: 0
         });
     return atom;
+}
+
+function jsonToMolecule(tokens) {
+    primaryChain = [];
+    var atom = null;
+    var bond = 1;
+
+    for (var i = 0; i < tokens.length; i++) {
+        var token = tokens[i];
+
+        switch(token.type) {
+            case "atom":
+                var newatom = new Atom(token.symbol);
+                if (atom != null) {
+                    atom.addBond(newatom, bond)
+                }
+                atom = newatom;
+                primaryChain.push(newatom);
+                bond = 1;
+                break;
+            case "bond":
+                bond = parseInt(token.order);
+                break;
+        }
+    }
+    addMissingHydrogens(primaryChain);
+    return primaryChain[0];
 }
 
 var corners = [];
