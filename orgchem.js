@@ -33,7 +33,7 @@ function Atom(element) {
     }
 }
 
-function organicNameToMolecyle(parsedMolecule) {
+function organicNameToMolecule(parsedMolecule) {
     var carbonNum = parsedMolecule.rootword;
 
     var sideChains = {};

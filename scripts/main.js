@@ -131,7 +131,7 @@ function parse(str) {
         return;
     }
 
-    var atom = organicNameToMolecyle(data);
+    var atom = organicNameToMolecule(data);
 
     clearAll();
     drawAtomPhysicsJs(null, atom,
